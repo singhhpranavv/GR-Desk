@@ -32,6 +32,26 @@ workflows:
             echo "Download the iOS Firebase plist for bundle id ${BUNDLE_ID} and commit it privately or add it in Codemagic before building."
             exit 1
           fi
+      - name: Attach Firebase plist to iOS target
+        script: |
+          ruby -e "require 'xcodeproj'" || gem install xcodeproj --no-document
+          ruby <<'RUBY'
+          require 'xcodeproj'
+
+          project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
+          target = project.targets.find { |item| item.name == 'Runner' }
+          raise 'Runner target not found' if target.nil?
+
+          runner_group = project.main_group.find_subpath('Runner', true)
+          file_ref = runner_group.files.find { |item| item.path == 'GoogleService-Info.plist' } ||
+            runner_group.new_file('GoogleService-Info.plist')
+
+          unless target.resources_build_phase.files_references.include?(file_ref)
+            target.add_resources([file_ref])
+          end
+
+          project.save
+          RUBY
       - name: Get Flutter packages
         script: |
           flutter pub get

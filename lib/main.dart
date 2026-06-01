@@ -34,10 +34,100 @@ class Palette {
   static const ink = Color(0xFF18202B);
 }
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const GRDeskApp());
+  runApp(const BootstrapApp());
+}
+
+class BootstrapApp extends StatefulWidget {
+  const BootstrapApp({super.key});
+
+  @override
+  State<BootstrapApp> createState() => _BootstrapAppState();
+}
+
+class _BootstrapAppState extends State<BootstrapApp> {
+  late final Future<void> _firebaseInit = Firebase.initializeApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _firebaseInit,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && !snapshot.hasError) {
+          return const GRDeskApp();
+        }
+        return MaterialApp(
+          title: 'GR Desk',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Palette.commandBlue),
+          ),
+          home: FirebaseStartupScreen(error: snapshot.error),
+        );
+      },
+    );
+  }
+}
+
+class FirebaseStartupScreen extends StatelessWidget {
+  const FirebaseStartupScreen({super.key, this.error});
+  final Object? error;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasError = error != null;
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Palette.commandDark, Palette.commandBlue, Color(0xFF123A6D)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.hotel_rounded, color: Colors.white, size: 72),
+                const SizedBox(height: 16),
+                const Text('GR Desk', style: TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 8),
+                Text(
+                  hasError ? 'Firebase startup failed' : 'Starting secure room operations...',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+                const SizedBox(height: 22),
+                if (hasError)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Text(
+                      error.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  )
+                else
+                  const LinearProgressIndicator(color: Palette.teal, backgroundColor: Colors.white24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class GRDeskApp extends StatelessWidget {
