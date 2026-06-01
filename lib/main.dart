@@ -805,20 +805,130 @@ class _AppShellState extends State<AppShell> {
         ];
         return Scaffold(
           body: PremiumBackground(child: SafeArea(child: pages[index])),
-          bottomNavigationBar: NavigationBar(
+          bottomNavigationBar: PremiumBottomNav(
             selectedIndex: index,
-            onDestinationSelected: (value) => setState(() => index = value),
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.dashboard_rounded), label: 'Dash'),
-              NavigationDestination(icon: Icon(Icons.bed_rounded), label: 'Rooms'),
-              NavigationDestination(icon: Icon(Icons.list_alt_rounded), label: 'Book'),
-              NavigationDestination(icon: Icon(Icons.history_rounded), label: 'History'),
-              NavigationDestination(icon: Icon(Icons.analytics_rounded), label: 'Stats'),
-              NavigationDestination(icon: Icon(Icons.person_rounded), label: 'Profile'),
-            ],
+            onSelected: (value) => setState(() => index = value),
           ),
         );
       },
+    );
+  }
+}
+
+class PremiumBottomNav extends StatelessWidget {
+  const PremiumBottomNav({super.key, required this.selectedIndex, required this.onSelected});
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  static const items = [
+    _NavSpec('Dash', Icons.dashboard_rounded, Palette.commandBlue),
+    _NavSpec('Rooms', Icons.bed_rounded, Palette.forest),
+    _NavSpec('Book', Icons.list_alt_rounded, Palette.brass),
+    _NavSpec('History', Icons.history_rounded, Palette.copper),
+    _NavSpec('Stats', Icons.analytics_rounded, Palette.violet),
+    _NavSpec('Profile', Icons.person_rounded, Palette.teal),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.92),
+        border: Border(top: BorderSide(color: Palette.commandBlue.withOpacity(0.10))),
+        boxShadow: [BoxShadow(color: Palette.commandBlue.withOpacity(0.14), blurRadius: 24, offset: const Offset(0, -10))],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            for (var i = 0; i < items.length; i++)
+              Expanded(
+                child: _PremiumTab(
+                  item: items[i],
+                  selected: i == selectedIndex,
+                  onTap: () => onSelected(i),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavSpec {
+  const _NavSpec(this.label, this.icon, this.color);
+  final String label;
+  final IconData icon;
+  final Color color;
+}
+
+class _PremiumTab extends StatelessWidget {
+  const _PremiumTab({required this.item, required this.selected, required this.onTap});
+  final _NavSpec item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: selected ? 0.92 : 1, end: selected ? 1 : 0.92),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 9),
+          decoration: BoxDecoration(
+            gradient: selected ? LinearGradient(colors: [item.color.withOpacity(0.20), Palette.commandBlue.withOpacity(0.10)]) : null,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: selected ? item.color.withOpacity(0.28) : Colors.transparent),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (selected)
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: item.color.withOpacity(0.26), blurRadius: 18, spreadRadius: 2)],
+                      ),
+                    ),
+                  Icon(item.icon, color: selected ? item.color : Palette.ink.withOpacity(0.58), size: selected ? 25 : 22),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                  color: selected ? item.color : Palette.ink.withOpacity(0.62),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                width: selected ? 18 : 0,
+                height: 3,
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(color: item.color, borderRadius: BorderRadius.circular(50)),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -928,26 +1038,37 @@ class BookingTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: PremiumCard(
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingDetailsScreen(booking: booking, user: user))),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text(booking.guestName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
-                StatusChip(booking.status),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text('${booking.rankDesignation} | ${booking.unitOfficeRelation}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(displayRoom(booking.roomId), style: TextStyle(color: statusColor(booking.status), fontWeight: FontWeight.w900)),
-                const SizedBox(width: 12),
-                Expanded(child: Text(formatDateTime(booking.checkInDateTime))),
-              ],
-            ),
-          ],
+        child: Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), gradient: LinearGradient(colors: [statusColor(booking.status).withOpacity(0.08), Colors.transparent])),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(color: statusColor(booking.status).withOpacity(0.13), borderRadius: BorderRadius.circular(13)),
+                    child: Icon(Icons.person_rounded, color: statusColor(booking.status)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(booking.guestName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900))),
+                  StatusChip(booking.status),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text('${booking.rankDesignation} | ${booking.unitOfficeRelation}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Text(displayRoom(booking.roomId), style: TextStyle(color: statusColor(booking.status), fontWeight: FontWeight.w900)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(formatDateTime(booking.checkInDateTime), style: const TextStyle(fontWeight: FontWeight.w700))),
+                  const Icon(Icons.chevron_right_rounded, color: Palette.ink),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1445,6 +1566,24 @@ class BackgroundGridPainter extends CustomPainter {
       false,
       sweep,
     );
+    final wave = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Palette.violet.withOpacity(0.08);
+    final path = Path();
+    for (var x = 0.0; x <= size.width; x += 18) {
+      final y = size.height * 0.74 + math.sin((x / size.width * math.pi * 2) + (progress * math.pi * 2)) * 18;
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, wave);
+    final copperGlow = Paint()..shader = RadialGradient(
+      colors: [Palette.copper.withOpacity(0.12), Colors.transparent],
+    ).createShader(Rect.fromCircle(center: Offset(size.width * 0.08, size.height * (0.55 + 0.12 * math.sin(progress * math.pi * 2))), radius: 140));
+    canvas.drawCircle(Offset(size.width * 0.08, size.height * (0.55 + 0.12 * math.sin(progress * math.pi * 2))), 140, copperGlow);
   }
 
   @override
@@ -1477,16 +1616,60 @@ class PremiumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = Card(
-      margin: const EdgeInsets.only(bottom: 10),
+    final card = TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, animatedChild) {
+        return Transform.translate(
+          offset: Offset(0, 12 * (1 - value)),
+          child: Opacity(opacity: value, child: animatedChild),
+        );
+      },
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          gradient: LinearGradient(colors: [Palette.commandBlue.withOpacity(0.045), Colors.white]),
+          borderRadius: BorderRadius.circular(14),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white.withOpacity(0.98), const Color(0xFFF8FBFF).withOpacity(0.96)],
+          ),
+          border: Border.all(color: Colors.white.withOpacity(0.70)),
+          boxShadow: [
+            BoxShadow(color: Palette.commandBlue.withOpacity(0.10), blurRadius: 24, offset: const Offset(0, 12)),
+            BoxShadow(color: Colors.white.withOpacity(0.90), blurRadius: 2, offset: const Offset(0, -1)),
+          ],
         ),
-        child: child,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -36,
+                top: -46,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Palette.teal.withOpacity(0.07)),
+                ),
+              ),
+              Positioned(
+                left: -28,
+                bottom: -42,
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: Palette.brass.withOpacity(0.06)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: child,
+              ),
+            ],
+          ),
+        ),
       ),
     );
     if (onTap == null) return card;
@@ -1582,26 +1765,84 @@ class HeaderHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(colors: [Palette.commandBlue, Color(0xFF123F7A), Color(0xFF12233A)]),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(name, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          const Text('Live operational picture for Zanskar, Indus and Shyok', style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 16),
-          Text(metric, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: Palette.teal, fontWeight: FontWeight.w800)),
-        ],
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Transform.scale(scale: 0.96 + value * 0.04, child: Opacity(opacity: value, child: child)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Palette.commandDark, Palette.commandBlue, Color(0xFF1556A6), Color(0xFF102039)],
+          ),
+          border: Border.all(color: Colors.white.withOpacity(0.20)),
+          boxShadow: [BoxShadow(color: Palette.commandBlue.withOpacity(0.30), blurRadius: 28, offset: const Offset(0, 16))],
+        ),
+        child: CustomPaint(
+          painter: HeroCircuitPainter(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: const Icon(Icons.hotel_rounded, color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text('Live operational picture for Zanskar, Indus and Shyok', style: TextStyle(color: Colors.white70)),
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(metric, style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(label, style: const TextStyle(color: Palette.teal, fontWeight: FontWeight.w900))),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Row(children: [MiniPill('Zanskar', Palette.teal), SizedBox(width: 8), MiniPill('Indus', Palette.brass), SizedBox(width: 8), MiniPill('Shyok', Palette.copper)]),
+            ],
+          ),
+        ),
       ),
     );
   }
+}
+
+class HeroCircuitPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final line = Paint()
+      ..color = Colors.white.withOpacity(0.06)
+      ..strokeWidth = 1;
+    for (var x = 0.0; x < size.width; x += 34) {
+      canvas.drawLine(Offset(x, 0), Offset(x + 48, size.height), line);
+    }
+    final arc = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Palette.teal.withOpacity(0.35);
+    canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.25), 52, arc);
+    canvas.drawCircle(Offset(size.width * 0.86, size.height * 0.25), 27, arc..color = Palette.brass.withOpacity(0.22));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class SectionTitle extends StatelessWidget {
@@ -1632,27 +1873,38 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumCard(
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-              ],
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.92, end: 1),
+      duration: const Duration(milliseconds: 520),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+      child: PremiumCard(
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [color.withOpacity(0.25), Palette.violet.withOpacity(0.08)]),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: color.withOpacity(0.22)),
+                boxShadow: [BoxShadow(color: color.withOpacity(0.18), blurRadius: 16, offset: const Offset(0, 8))],
+              ),
+              child: Icon(icon, color: color),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
+                  Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1669,7 +1921,18 @@ class ChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900)),
+          Row(
+            children: [
+              Container(width: 9, height: 28, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Palette.teal, Palette.brass]), borderRadius: BorderRadius.circular(50))),
+              const SizedBox(width: 10),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))),
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), gradient: const LinearGradient(colors: [Palette.teal, Palette.brass, Palette.copper])),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           child,
         ],
@@ -1859,21 +2122,35 @@ class RoomSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = statusColor(summary.status);
     return PremiumCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.bed_rounded, color: color),
-              const SizedBox(width: 8),
-              Expanded(child: Text(summary.roomId, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
-              StatusChip(summary.status),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(colors: [color.withOpacity(0.08), Colors.transparent]),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(color: color.withOpacity(0.14), borderRadius: BorderRadius.circular(14), border: Border.all(color: color.withOpacity(0.20))),
+                  child: Icon(Icons.bed_rounded, color: color),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(summary.roomId, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
+                StatusChip(summary.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(summary.current != null ? 'Current guest: ${summary.current!.guestName}' : 'No guest currently checked in', style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (summary.next != null) ...[
+              const SizedBox(height: 6),
+              Text('Next: ${summary.next!.guestName} on ${formatDateTime(summary.next!.checkInDateTime)}', style: const TextStyle(color: Palette.ink)),
             ],
-          ),
-          const SizedBox(height: 8),
-          if (summary.current != null) Text('Current guest: ${summary.current!.guestName}') else const Text('No guest currently checked in'),
-          if (summary.next != null) Text('Next: ${summary.next!.guestName} on ${formatDateTime(summary.next!.checkInDateTime)}'),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1886,10 +2163,21 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = statusColor(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.14), border: Border.all(color: color.withOpacity(0.26)), borderRadius: BorderRadius.circular(50)),
-      child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 11)),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.88, end: 1),
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutBack,
+      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [color.withOpacity(0.18), color.withOpacity(0.07)]),
+          border: Border.all(color: color.withOpacity(0.30)),
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: [BoxShadow(color: color.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 6))],
+        ),
+        child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 11)),
+      ),
     );
   }
 }
@@ -1948,9 +2236,14 @@ class ProfileInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: color.withOpacity(0.14), borderRadius: BorderRadius.circular(8)),
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [color.withOpacity(0.20), Palette.commandBlue.withOpacity(0.06)]),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withOpacity(0.20)),
+              boxShadow: [BoxShadow(color: color.withOpacity(0.14), blurRadius: 16, offset: const Offset(0, 8))],
+            ),
             child: Icon(icon, color: color),
           ),
           const SizedBox(width: 12),
