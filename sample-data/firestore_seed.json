@@ -1,0 +1,49 @@
+{
+  "rooms": {
+    "Zanskar": {
+      "roomId": "Zanskar",
+      "roomName": "Zanskar",
+      "status": "Available",
+      "currentBookingId": "",
+      "updatedAt": 1767225600000
+    },
+    "Indus": {
+      "roomId": "Indus",
+      "roomName": "Indus",
+      "status": "Available",
+      "currentBookingId": "",
+      "updatedAt": 1767225600000
+    },
+    "Shyok": {
+      "roomId": "Shyok",
+      "roomName": "Shyok",
+      "status": "Available",
+      "currentBookingId": "",
+      "updatedAt": 1767225600000
+    }
+  },
+  "bookings": {
+    "sample_booking_001": {
+      "id": "sample_booking_001",
+      "guestName": "Sample Guest",
+      "rankDesignation": "Major",
+      "unitOfficeRelation": "Unit HQ",
+      "mobileNumber": "9876543210",
+      "idProofType": "Service ID",
+      "idProofNumber": "SID12345",
+      "purposeOfVisit": "Official duty",
+      "roomId": "Zanskar",
+      "numberOfGuests": 1,
+      "checkInDateTime": 1767268800000,
+      "checkOutDateTime": 1767355200000,
+      "actualCheckInAt": 0,
+      "actualCheckOutAt": 0,
+      "status": "Upcoming",
+      "paymentCharges": 0.0,
+      "remarks": "Seed booking for testing",
+      "createdBy": "admin@example.com",
+      "createdAt": 1767225600000,
+      "updatedAt": 1767225600000
+    }
+  }
+}

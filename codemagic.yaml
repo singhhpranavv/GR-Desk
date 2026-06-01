@@ -1,0 +1,51 @@
+workflows:
+  ios-altstore-ipa:
+    name: GR Desk iOS IPA for AltStore
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.unit.guestroommanager"
+        APP_NAME: "GR Desk"
+    scripts:
+      - name: Generate iOS runner if needed
+        script: |
+          flutter create . --platforms=ios --org com.unit --project-name gr_desk
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${APP_NAME}" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleName ${APP_NAME}" ios/Runner/Info.plist
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+      - name: Restore Firebase plist from Codemagic variable if provided
+        script: |
+          if [ -n "${GOOGLE_SERVICE_INFO_PLIST_B64:-}" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST_B64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          fi
+      - name: Verify Firebase iOS config
+        script: |
+          if [ ! -f "ios/Runner/GoogleService-Info.plist" ]; then
+            echo "Missing ios/Runner/GoogleService-Info.plist"
+            echo "Download the iOS Firebase plist for bundle id ${BUNDLE_ID} and commit it privately or add it in Codemagic before building."
+            exit 1
+          fi
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Analyze Dart source
+        script: |
+          flutter analyze
+      - name: Build unsigned iOS app
+        script: |
+          flutter build ios --release --no-codesign
+      - name: Package unsigned IPA for AltStore
+        script: |
+          rm -rf build/ios/ipa
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app "build/ios/ipa/Payload/${APP_NAME}.app"
+          cd build/ios/ipa
+          /usr/bin/zip -r "GRDesk-unsigned.ipa" Payload
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/iphoneos/Runner.app
+      - flutter_drive.log

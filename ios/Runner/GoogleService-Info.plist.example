@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>README</key>
+  <string>Download the real iOS GoogleService-Info.plist from Firebase Console and place it as ios/Runner/GoogleService-Info.plist, or provide it to Codemagic through GOOGLE_SERVICE_INFO_PLIST_B64.</string>
+</dict>
+</plist>

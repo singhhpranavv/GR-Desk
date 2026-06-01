@@ -1,0 +1,24 @@
+name: gr_desk
+description: GR Desk iPhone app source for Codemagic IPA builds.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: ^5.6.1
+  cupertino_icons: ^1.0.8
+  firebase_auth: ^5.4.1
+  firebase_core: ^3.10.1
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
