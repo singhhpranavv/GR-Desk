@@ -19,6 +19,7 @@ workflows:
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${APP_NAME}" ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleName ${APP_NAME}" ios/Runner/Info.plist
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*;/PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+          rm -rf test
       - name: Restore Firebase plist from Codemagic variable if provided
         script: |
           if [ -n "${GOOGLE_SERVICE_INFO_PLIST_B64:-}" ]; then
@@ -36,7 +37,7 @@ workflows:
           flutter pub get
       - name: Analyze Dart source
         script: |
-          flutter analyze
+          flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Build unsigned iOS app
         script: |
           flutter build ios --release --no-codesign

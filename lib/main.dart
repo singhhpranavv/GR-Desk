@@ -1416,7 +1416,7 @@ class HeaderHero extends StatelessWidget {
 }
 
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, [this.subtitle, super.key]);
+  const SectionTitle(this.title, [this.subtitle, Key? key]) : super(key: key);
   final String title;
   final String? subtitle;
 
