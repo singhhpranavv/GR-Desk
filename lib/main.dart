@@ -7,6 +7,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 const rooms = ['Zanskar', 'Indus', 'Shyok'];
+const timelineRooms = [
+  TimelineRoomSpec(roomId: 'Indus', label: 'Indus (GR1)'),
+  TimelineRoomSpec(roomId: 'Zanskar', label: 'Zanskar (GR2)'),
+  TimelineRoomSpec(roomId: 'Shyok', label: 'Shyok (GR3)'),
+];
+
+class TimelineRoomSpec {
+  const TimelineRoomSpec({required this.roomId, required this.label});
+  final String roomId;
+  final String label;
+}
 
 class Roles {
   static const admin = 'admin';
@@ -844,7 +855,7 @@ class DashboardScreen extends StatelessWidget {
         const SizedBox(height: 14),
         ChartCard(title: 'Available vs occupied', child: DonutChart(available: stats.availableRooms, occupied: stats.occupiedRooms)),
         ChartCard(title: 'Room-wise bookings', child: BarChart(values: stats.roomWiseBookings)),
-        ChartCard(title: 'Monthly occupancy trend', child: LineTrend(values: stats.monthlyTrend)),
+        ChartCard(title: 'Monthly occupancy trend', child: LineTrend(values: stats.monthlyTrend, labels: monthTrendLabels(stats.monthlyTrend.length))),
         RoomTimeline(bookings: stats.timelineBookings),
         const SectionTitle('Recent Bookings'),
         const SizedBox(height: 8),
@@ -1198,7 +1209,7 @@ class ReportsScreen extends StatelessWidget {
         const SizedBox(height: 12),
         ChartCard(title: 'Booking status summary', child: BarChart(values: stats.statusSummary)),
         ChartCard(title: 'Room-wise occupancy', child: BarChart(values: stats.roomWiseBookings)),
-        ChartCard(title: 'Monthly trend', child: LineTrend(values: stats.monthlyTrend)),
+        ChartCard(title: 'Monthly trend', child: LineTrend(values: stats.monthlyTrend, labels: monthTrendLabels(stats.monthlyTrend.length))),
         PremiumCard(child: Text('Total bookings created this month: ${stats.monthBookings}', style: Theme.of(context).textTheme.titleMedium)),
       ],
     );
@@ -1253,37 +1264,87 @@ class RoomTimeline extends StatelessWidget {
     return ChartCard(
       title: 'Two-month room timeline',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: days.map((day) => SizedBox(width: 74, child: Center(child: Text(DateFormat('dd MMM').format(day), style: const TextStyle(fontWeight: FontWeight.w700))))).toList(),
-            ),
+          const Text(
+            'One synchronized scroll for all rooms. Green cells are available; colored cells are booked or active.',
+            style: TextStyle(color: Palette.ink, fontWeight: FontWeight.w600),
           ),
-          ...rooms.map((room) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(width: 78, child: Text(room, style: const TextStyle(fontWeight: FontWeight.w900))),
-                  Expanded(
-                    child: SizedBox(
-                      height: 72,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: days.map((day) {
-                          final booking = bookings.where((b) => roomMatches(b.roomId, room) && overlapsDay(b, day)).firstOrNull;
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const SizedBox(width: 106),
+                    ...days.map(
+                      (day) => Container(
+                        width: 78,
+                        margin: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Palette.commandBlue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Palette.commandBlue.withOpacity(0.14)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(DateFormat('EEE').format(day), style: const TextStyle(fontSize: 10, color: Palette.commandBlue, fontWeight: FontWeight.w900)),
+                            Text(DateFormat('dd MMM').format(day), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...timelineRooms.map((room) {
+                  final roomBookings = bookings.where((b) => roomMatches(b.roomId, room.roomId)).toList();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 72,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Palette.commandBlue, Color(0xFF123A6D)]),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [BoxShadow(color: Palette.commandBlue.withOpacity(0.18), blurRadius: 12, offset: const Offset(0, 5))],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.hotel_rounded, size: 18, color: Colors.white),
+                              const SizedBox(height: 4),
+                              Text(room.label, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        ...days.map((day) {
+                          final booking = roomBookings.where((b) => overlapsDay(b, day)).firstOrNull;
                           final booked = booking != null;
                           final color = booked ? statusColor(booking.status) : Palette.teal;
                           return Container(
-                            width: 74,
+                            width: 78,
+                            height: 72,
                             margin: const EdgeInsets.only(right: 6),
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(booked ? 0.18 : 0.08),
-                              border: Border.all(color: color.withOpacity(0.34)),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  color.withOpacity(booked ? 0.22 : 0.11),
+                                  Colors.white.withOpacity(0.82),
+                                ],
+                              ),
+                              border: Border.all(color: color.withOpacity(booked ? 0.40 : 0.22)),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
@@ -1295,45 +1356,69 @@ class RoomTimeline extends StatelessWidget {
                               ],
                             ),
                           );
-                        }).toList(),
-                      ),
+                        }),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  );
+                }),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class PremiumBackground extends StatelessWidget {
+class PremiumBackground extends StatefulWidget {
   const PremiumBackground({super.key, required this.child});
   final Widget child;
 
   @override
+  State<PremiumBackground> createState() => _PremiumBackgroundState();
+}
+
+class _PremiumBackgroundState extends State<PremiumBackground> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 12),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFF7FAFC), Color(0xFFEAF1F8), Color(0xFFF9FBFF)],
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF7FAFC), Color(0xFFEAF1F8), Color(0xFFF9FBFF)],
+                ),
+              ),
             ),
-          ),
-        ),
-        Positioned.fill(child: CustomPaint(painter: BackgroundGridPainter())),
-        child,
-      ],
+            Positioned.fill(child: CustomPaint(painter: BackgroundGridPainter(progress: _controller.value))),
+            widget.child,
+          ],
+        );
+      },
     );
   }
 }
 
 class BackgroundGridPainter extends CustomPainter {
+  BackgroundGridPainter({required this.progress});
+  final double progress;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -1345,12 +1430,26 @@ class BackgroundGridPainter extends CustomPainter {
     for (var y = 0.0; y < size.height; y += 28) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
+    final glow = Paint()..shader = RadialGradient(
+      colors: [Palette.teal.withOpacity(0.22), Colors.transparent],
+    ).createShader(Rect.fromCircle(center: Offset(size.width * (0.15 + 0.70 * progress), size.height * 0.18), radius: 170));
+    canvas.drawCircle(Offset(size.width * (0.15 + 0.70 * progress), size.height * 0.18), 170, glow);
+    final sweep = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..color = Palette.brass.withOpacity(0.18);
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(size.width * 0.86, size.height * 0.10), radius: 82),
+      math.pi * 2 * progress,
+      math.pi * 0.72,
+      false,
+      sweep,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant BackgroundGridPainter oldDelegate) => oldDelegate.progress != progress;
 }
-
 class GlassPanel extends StatelessWidget {
   const GlassPanel({super.key, required this.child});
   final Widget child;
@@ -1642,12 +1741,77 @@ class BarChart extends StatelessWidget {
 }
 
 class LineTrend extends StatelessWidget {
-  const LineTrend({super.key, required this.values});
+  const LineTrend({super.key, required this.values, required this.labels});
   final List<double> values;
+  final List<String> labels;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(height: 150, child: CustomPaint(painter: LineTrendPainter(values), child: const SizedBox.expand()));
+    final points = values.isEmpty ? <double>[0] : values.map((value) => value.clamp(0, 100).toDouble()).toList();
+    final xLabels = labels.length == points.length ? labels : List.generate(points.length, (index) => 'M${index + 1}');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Y-axis: occupancy %', style: TextStyle(fontSize: 11, color: Palette.ink, fontWeight: FontWeight.w700)),
+            Text('X-axis: month', style: TextStyle(fontSize: 11, color: Palette.ink, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const SizedBox(
+              width: 36,
+              height: 172,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('100%', style: TextStyle(fontSize: 10, color: Palette.ink)),
+                  Text('75%', style: TextStyle(fontSize: 10, color: Palette.ink)),
+                  Text('50%', style: TextStyle(fontSize: 10, color: Palette.ink)),
+                  Text('25%', style: TextStyle(fontSize: 10, color: Palette.ink)),
+                  Text('0%', style: TextStyle(fontSize: 10, color: Palette.ink)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SizedBox(
+                height: 172,
+                child: CustomPaint(painter: LineTrendPainter(points), child: const SizedBox.expand()),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 44, top: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: xLabels.map((label) => Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Palette.ink))).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var i = 0; i < points.length; i++)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: Palette.violet.withOpacity(0.09),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Palette.violet.withOpacity(0.20)),
+                ),
+                child: Text('${xLabels[i]}: ${points[i].round()}%', style: const TextStyle(color: Palette.violet, fontSize: 11, fontWeight: FontWeight.w900)),
+              ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -1660,23 +1824,27 @@ class LineTrendPainter extends CustomPainter {
     final grid = Paint()
       ..color = Palette.commandBlue.withOpacity(0.08)
       ..strokeWidth = 1;
-    for (var i = 0; i < 4; i++) {
-      final y = size.height * i / 3;
+    for (var i = 0; i < 5; i++) {
+      final y = size.height * i / 4;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
     if (values.isEmpty) return;
-    final maxValue = values.fold<double>(1, math.max);
     final path = Path();
     for (var i = 0; i < values.length; i++) {
       final x = values.length == 1 ? 0.0 : size.width * i / (values.length - 1);
-      final y = size.height - (values[i] / maxValue) * (size.height - 18) - 9;
+      final y = size.height - (values[i] / 100) * (size.height - 18) - 9;
       if (i == 0) {
         path.moveTo(x, y);
       } else {
         path.lineTo(x, y);
       }
+      canvas.drawCircle(Offset(x, y), 9, Paint()..color = Palette.violet.withOpacity(0.16));
+      canvas.drawCircle(Offset(x, y), 4.5, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(x, y), 3.5, Paint()..color = Palette.violet);
     }
-    canvas.drawPath(path, Paint()..color = Palette.teal..style = PaintingStyle.stroke..strokeWidth = 4..strokeCap = StrokeCap.round);
+    canvas.drawLine(Offset(0, size.height - 1), Offset(size.width, size.height - 1), Paint()..color = Palette.ink.withOpacity(0.18)..strokeWidth = 1.2);
+    canvas.drawLine(const Offset(0, 0), Offset(0, size.height), Paint()..color = Palette.ink.withOpacity(0.18)..strokeWidth = 1.2);
+    canvas.drawPath(path, Paint()..color = Palette.violet..style = PaintingStyle.stroke..strokeWidth = 4..strokeCap = StrokeCap.round);
   }
 
   @override
@@ -1841,6 +2009,15 @@ DateTime startOfMonth([int offset = 0]) {
 }
 
 DateTime endOfMonth([int offset = 0]) => DateTime(startOfMonth(offset).year, startOfMonth(offset).month + 1).subtract(const Duration(milliseconds: 1));
+
+List<String> monthTrendLabels(int count) {
+  final formatter = DateFormat('MMM');
+  return List.generate(count, (index) {
+    final monthsBack = count - 1 - index;
+    final date = DateTime(DateTime.now().year, DateTime.now().month - monthsBack);
+    return formatter.format(date);
+  });
+}
 
 int overlapMillis(int startA, int endA, int startB, int endB) {
   return math.max(0, math.min(endA, endB) - math.max(startA, startB));
