@@ -6,11 +6,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-const rooms = ['Zanskar', 'Indus', 'Shyok'];
+const rooms = ['Flash', 'Spectrum', 'Sanchar'];
 const timelineRooms = [
-  TimelineRoomSpec(roomId: 'Indus', label: 'Indus (GR1)'),
-  TimelineRoomSpec(roomId: 'Zanskar', label: 'Zanskar (GR2)'),
-  TimelineRoomSpec(roomId: 'Shyok', label: 'Shyok (GR3)'),
+  TimelineRoomSpec(roomId: 'Spectrum', label: 'Spectrum (GR1)'),
+  TimelineRoomSpec(roomId: 'Flash', label: 'Flash (GR2)'),
+  TimelineRoomSpec(roomId: 'Sanchar', label: 'Sanchar (GR3)'),
 ];
 
 class TimelineRoomSpec {
@@ -311,7 +311,7 @@ class Booking {
       idProofType: (data['idProofType'] ?? '').toString(),
       idProofNumber: (data['idProofNumber'] ?? '').toString(),
       purposeOfVisit: (data['purposeOfVisit'] ?? '').toString(),
-      roomId: displayRoom((data['roomId'] ?? 'Zanskar').toString()),
+      roomId: displayRoom((data['roomId'] ?? 'Flash').toString()),
       numberOfGuests: (data['numberOfGuests'] as num?)?.toInt() ?? 1,
       checkInDateTime: millis(data['checkInDateTime']),
       checkOutDateTime: millis(data['checkOutDateTime']),
@@ -457,7 +457,14 @@ class FirebaseRepo {
   }
 
   static Future<void> migrateLegacyRoomIds() async {
-    final legacy = {'GR1': 'Zanskar', 'GR2': 'Indus', 'GR3': 'Shyok'};
+    final legacy = {
+      'GR1': 'Flash',
+      'GR2': 'Spectrum',
+      'GR3': 'Sanchar',
+      'Zanskar': 'Flash',
+      'Indus': 'Spectrum',
+      'Shyok': 'Sanchar',
+    };
     final snapshot = await db.collection('bookings').get();
     final batch = db.batch();
     var hasWrites = false;
@@ -986,7 +993,7 @@ class RoomsScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const SectionTitle('Room Status', 'Fixed room register for Zanskar, Indus and Shyok'),
+        const SectionTitle('Room Status', 'Fixed room register for Flash, Spectrum and Sanchar'),
         const SizedBox(height: 12),
         ...summaries.map((summary) => RoomSummaryCard(summary: summary)),
       ],
@@ -1350,7 +1357,7 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 12),
         HeaderHero(metric: user.isAdmin ? 'Admin' : 'Viewer', label: user.email, name: user.name),
         const SizedBox(height: 12),
-        ProfileInfoCard('About GR Desk', 'GR Desk manages Zanskar, Indus and Shyok with Firebase real-time sync, role-based access, booking history, reports and a two-month visual timeline.', Icons.info_rounded, Palette.teal),
+        ProfileInfoCard('About GR Desk', 'GR Desk manages Flash, Spectrum and Sanchar with Firebase real-time sync, role-based access, booking history, reports and a two-month visual timeline.', Icons.info_rounded, Palette.teal),
         ProfileInfoCard('Developer', 'This application is made and developed by Pranav Singh with focus on dependable unit-level guest room operations, premium interface quality and clean architecture.', Icons.code_rounded, Palette.copper),
         ProfileInfoCard('Security Model', 'Admin users can add, edit, cancel, check in and check out bookings. Caretaker / viewer users can monitor dashboard, room status, reports, timeline and guest history only.', Icons.security_rounded, Palette.brass),
         PremiumCard(
@@ -1704,7 +1711,7 @@ class CommandHero extends StatelessWidget {
               Spacer(),
               Text('GR Desk', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
               SizedBox(height: 6),
-              Text('Secure guest room operations for Zanskar, Indus and Shyok', style: TextStyle(color: Colors.white70)),
+              Text('Secure guest room operations for Flash, Spectrum and Sanchar', style: TextStyle(color: Colors.white70)),
             ],
           ),
         ),
@@ -1804,7 +1811,7 @@ class HeaderHero extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              const Text('Live operational picture for Zanskar, Indus and Shyok', style: TextStyle(color: Colors.white70)),
+              const Text('Live operational picture for Flash, Spectrum and Sanchar', style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 18),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -1815,7 +1822,7 @@ class HeaderHero extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              const Row(children: [MiniPill('Zanskar', Palette.teal), SizedBox(width: 8), MiniPill('Indus', Palette.brass), SizedBox(width: 8), MiniPill('Shyok', Palette.copper)]),
+              const Row(children: [MiniPill('Flash', Palette.teal), SizedBox(width: 8), MiniPill('Spectrum', Palette.brass), SizedBox(width: 8), MiniPill('Sanchar', Palette.copper)]),
             ],
           ),
         ),
@@ -2275,11 +2282,17 @@ int millis(dynamic value) {
 String displayRoom(String roomId) {
   switch (roomId) {
     case 'GR1':
-      return 'Zanskar';
+      return 'Flash';
     case 'GR2':
-      return 'Indus';
+      return 'Spectrum';
     case 'GR3':
-      return 'Shyok';
+      return 'Sanchar';
+    case 'Zanskar':
+      return 'Flash';
+    case 'Indus':
+      return 'Spectrum';
+    case 'Shyok':
+      return 'Sanchar';
     default:
       return roomId;
   }

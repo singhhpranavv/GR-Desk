@@ -10,9 +10,9 @@ The app uses the same Firebase backend shape as the Android version:
 
 Rooms are fixed:
 
-- Zanskar
-- Indus
-- Shyok
+- Flash
+- Spectrum
+- Sanchar
 
 Roles are the same:
 
@@ -144,7 +144,7 @@ AltStore Classic has Apple limits: free Apple IDs usually need refresh within 7 
   "idProofType": "Service ID",
   "idProofNumber": "SID12345",
   "purposeOfVisit": "Official duty",
-  "roomId": "Zanskar",
+  "roomId": "Flash",
   "numberOfGuests": 1,
   "checkInDateTime": 1767268800000,
   "checkOutDateTime": 1767355200000,
@@ -164,4 +164,4 @@ AltStore Classic has Apple limits: free Apple IDs usually need refresh within 7 
 - Dashboard `Checked in` and `Checked out` are actual operational counts based on admin taps, not scheduled dates.
 - Upcoming bookings do not reduce current available room count.
 - The two-month timeline displays booked and available slots for all three rooms.
-- Old room IDs `GR1`, `GR2`, `GR3` are mapped to `Zanskar`, `Indus`, `Shyok`.
+- Old room IDs `GR1`, `GR2`, `GR3`, `Zanskar`, `Indus`, and `Shyok` are mapped to `Flash`, `Spectrum`, and `Sanchar`.

@@ -1,22 +1,22 @@
 {
   "rooms": {
-    "Zanskar": {
-      "roomId": "Zanskar",
-      "roomName": "Zanskar",
+    "Flash": {
+      "roomId": "Flash",
+      "roomName": "Flash",
       "status": "Available",
       "currentBookingId": "",
       "updatedAt": 1767225600000
     },
-    "Indus": {
-      "roomId": "Indus",
-      "roomName": "Indus",
+    "Spectrum": {
+      "roomId": "Spectrum",
+      "roomName": "Spectrum",
       "status": "Available",
       "currentBookingId": "",
       "updatedAt": 1767225600000
     },
-    "Shyok": {
-      "roomId": "Shyok",
-      "roomName": "Shyok",
+    "Sanchar": {
+      "roomId": "Sanchar",
+      "roomName": "Sanchar",
       "status": "Available",
       "currentBookingId": "",
       "updatedAt": 1767225600000
@@ -32,7 +32,7 @@
       "idProofType": "Service ID",
       "idProofNumber": "SID12345",
       "purposeOfVisit": "Official duty",
-      "roomId": "Zanskar",
+      "roomId": "Flash",
       "numberOfGuests": 1,
       "checkInDateTime": 1767268800000,
       "checkOutDateTime": 1767355200000,
