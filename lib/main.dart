@@ -13,6 +13,31 @@ const timelineRooms = [
   TimelineRoomSpec(roomId: 'Sanchar', label: 'Sanchar (GR3)'),
 ];
 
+const roomChargeHeaders = [
+  'Category',
+  'Spectrum (GR No 1)\nBoth bedrooms occupied',
+  'Spectrum (GR No 1), Flash (GR No 2) & Sanchar (GR No 3)\nSingle bedroom',
+];
+
+const roomChargeRows = [
+  ['Offrs on TD', 'As per TD rates', 'As per TD rates'],
+  ['Offrs (Lve & Retd)', '1000', '800'],
+  ['Civs', '2000', '1600'],
+  ['Offrs on Trg events\n(Not on TD/Lve)', '600', '400'],
+];
+
+const foodChargeHeaders = ['Cat', 'Breakfast', 'Lunch', 'Dinner'];
+
+const foodChargeRows = [
+  ['Offrs on TD', 'As per rates being claimed', 'As per rates being claimed', 'As per rates being claimed'],
+  ['Offr with LRC', '15', '40', '40'],
+  ['Offr w/o LRC\n(incl families)', '50', '100', '100'],
+  ['Own Offr families', '40', '80', '80'],
+  ['Civ Guests', '75', '150', '150'],
+  ['Kids above 15 yrs', 'Full rate', 'Full rate', 'Full rate'],
+  ['Kids below 15 yrs', '20', '40', '40'],
+];
+
 class TimelineRoomSpec {
   const TimelineRoomSpec({required this.roomId, required this.label});
   final String roomId;
@@ -1339,7 +1364,181 @@ class ReportsScreen extends StatelessWidget {
         ChartCard(title: 'Room-wise occupancy', child: BarChart(values: stats.roomWiseBookings)),
         ChartCard(title: 'Monthly trend', child: LineTrend(values: stats.monthlyTrend, labels: monthTrendLabels(stats.monthlyTrend.length))),
         PremiumCard(child: Text('Total bookings created this month: ${stats.monthBookings}', style: Theme.of(context).textTheme.titleMedium)),
+        const ChargesCommandStrip(),
+        const ChargesTableCard(
+          title: 'Room charges',
+          subtitle: 'Numeric values are in INR. TD rates remain as approved or claimed rates.',
+          icon: Icons.hotel_rounded,
+          headers: roomChargeHeaders,
+          rows: roomChargeRows,
+        ),
+        const ChargesTableCard(
+          title: 'Food charges',
+          subtitle: 'Meal-wise charge reference for breakfast, lunch and dinner.',
+          icon: Icons.restaurant_rounded,
+          headers: foodChargeHeaders,
+          rows: foodChargeRows,
+        ),
       ],
+    );
+  }
+}
+
+class ChargesCommandStrip extends StatelessWidget {
+  const ChargesCommandStrip({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChartCard(
+      title: 'Charges reference desk',
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 680),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) => Transform.translate(
+          offset: Offset(0, 12 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        ),
+        child: Row(
+          children: const [
+            Expanded(child: ChargesMetricTile('Room', '4 categories', Icons.hotel_rounded, Palette.commandBlue)),
+            SizedBox(width: 8),
+            Expanded(child: ChargesMetricTile('Food', '7 categories', Icons.restaurant_rounded, Palette.teal)),
+            SizedBox(width: 8),
+            Expanded(child: ChargesMetricTile('Billing', 'INR / TD', Icons.payments_rounded, Palette.brass)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ChargesMetricTile extends StatelessWidget {
+  const ChargesMetricTile(this.title, this.value, this.icon, this.color, {super.key});
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 108,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(colors: [color.withOpacity(0.16), color.withOpacity(0.04)]),
+        border: Border.all(color: color.withOpacity(0.24)),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.10), blurRadius: 16, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 7),
+          Text(value, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 13)),
+          const SizedBox(height: 2),
+          Text(title, textAlign: TextAlign.center, style: const TextStyle(color: Palette.ink, fontWeight: FontWeight.w700, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
+class ChargesTableCard extends StatelessWidget {
+  const ChargesTableCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.headers,
+    required this.rows,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final List<String> headers;
+  final List<List<String>> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChartCard(
+      title: title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(colors: [Palette.commandBlue, Palette.teal]),
+                  boxShadow: [BoxShadow(color: Palette.commandBlue.withOpacity(0.18), blurRadius: 16, offset: const Offset(0, 8))],
+                ),
+                child: Icon(icon, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(subtitle, style: const TextStyle(color: Palette.ink, fontWeight: FontWeight.w600))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ChargesDataRow(cells: headers, isHeader: true),
+                ...rows.asMap().entries.map((entry) => ChargesDataRow(cells: entry.value, highlighted: entry.key.isEven)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChargesDataRow extends StatelessWidget {
+  const ChargesDataRow({super.key, required this.cells, this.isHeader = false, this.highlighted = false});
+  final List<String> cells;
+  final bool isHeader;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final rowGradient = isHeader
+        ? const LinearGradient(colors: [Palette.commandBlue, Palette.teal])
+        : LinearGradient(colors: [highlighted ? Palette.teal.withOpacity(0.08) : Palette.copper.withOpacity(0.05), Colors.transparent]);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 7),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: rowGradient,
+        border: Border.all(color: isHeader ? Colors.white.withOpacity(0.20) : Palette.teal.withOpacity(0.14)),
+      ),
+      child: Row(
+        children: cells.asMap().entries.map((entry) {
+          final first = entry.key == 0;
+          return Container(
+            width: first ? 174 : 214,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Text(
+              entry.value,
+              textAlign: first ? TextAlign.left : TextAlign.center,
+              style: TextStyle(
+                color: isHeader ? Colors.white : Palette.ink,
+                fontSize: isHeader ? 12 : 13,
+                fontWeight: isHeader || first ? FontWeight.w900 : FontWeight.w700,
+                height: 1.16,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
